@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mjosc.SimpleLMS.Entities.Models;
+using Mjosc.SimpleLMS.RestAPI.Extensions;
 
 namespace Mjosc.SimpleLMS.RestAPI
 {
@@ -28,8 +29,8 @@ namespace Mjosc.SimpleLMS.RestAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            Console.WriteLine(Configuration.GetConnectionString("SimpleLmsDatabase"));
             services.AddDbContext<LmsDbContext>(options => options.UseMySql(Configuration.GetConnectionString("SimpleLmsDatabase")));
+            services.AddJwtAuthentication(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
