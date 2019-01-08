@@ -29,7 +29,8 @@ namespace Mjosc.SimpleLMS.RestAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            services.AddDbContext<LmsDbContext>(options => options.UseMySql(Configuration.GetConnectionString("SimpleLmsDatabase")));
+
+            services.AddLmsDbContext(Configuration);
             services.AddJwtAuthentication(Configuration);
         }
 

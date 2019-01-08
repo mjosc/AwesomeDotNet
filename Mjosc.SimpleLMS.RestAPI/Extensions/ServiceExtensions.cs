@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Mjosc.SimpleLMS.Entities.Models;
 
 namespace Mjosc.SimpleLMS.RestAPI.Extensions
 {
     public static class ServiceExtensions
     {
-        public static void AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
+        public static void AddJwtAuthentication(this IServiceCollection services, IConfiguration config)
         {
-            string keyString = configuration.GetSection("AuthenticationStrings")["JwtSecretKey"];
+            string keyString = config.GetSection("AuthenticationStrings")["JwtSecretKey"];
             byte[] secretKey = Encoding.ASCII.GetBytes(keyString);
 
             services.AddAuthentication(options =>
@@ -31,6 +33,13 @@ namespace Mjosc.SimpleLMS.RestAPI.Extensions
                     ValidateAudience = false
                 };
             });
+        }
+
+        public static void AddLmsDbContext(this IServiceCollection services, IConfiguration config)
+        {
+            services.AddDbContext<LmsDbContext>(options =>
+                options.UseMySql(config.GetConnectionString("SimpleLmsDatabase"))
+            );
         }
     }
 }
