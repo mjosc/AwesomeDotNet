@@ -17,26 +17,16 @@ namespace Mjosc.SimpleLMS.Entities.Models
 
         public virtual DbSet<Course> Course { get; set; }
         public virtual DbSet<Enrollment> Enrollment { get; set; }
-        public virtual DbSet<Student> Student { get; set; }
-        public virtual DbSet<Teacher> Teacher { get; set; }
-
-//        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-//        {
-//            if (!optionsBuilder.IsConfigured)
-//            {
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-        //        optionsBuilder.UseMySql("Server=localhost;User Id=root;Password=mMj7kMjpw;Database=simple-lms");
-        //    }
-        //}
+        public virtual DbSet<User> User { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Course>(entity =>
             {
                 entity.HasIndex(e => e.TeacherId)
-                    .HasName("FK_Teacher_idx");
+                    .HasName("TeacherFK_idx");
 
-                entity.Property(e => e.CourseId).HasColumnType("int(11)");
+                entity.Property(e => e.CourseId).HasColumnType("bigint(20)");
 
                 entity.Property(e => e.CourseName)
                     .IsRequired()
@@ -44,13 +34,13 @@ namespace Mjosc.SimpleLMS.Entities.Models
 
                 entity.Property(e => e.CreditHours).HasColumnType("smallint(1)");
 
-                entity.Property(e => e.TeacherId).HasColumnType("int(11)");
+                entity.Property(e => e.TeacherId).HasColumnType("bigint(20)");
 
                 entity.HasOne(d => d.Teacher)
                     .WithMany(p => p.Course)
                     .HasForeignKey(d => d.TeacherId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Teacher");
+                    .HasConstraintName("TeacherFK");
             });
 
             modelBuilder.Entity<Enrollment>(entity =>
@@ -59,11 +49,11 @@ namespace Mjosc.SimpleLMS.Entities.Models
                     .HasName("PRIMARY");
 
                 entity.HasIndex(e => e.CourseId)
-                    .HasName("FK_courseId_idx");
+                    .HasName("CourseFK_idx");
 
-                entity.Property(e => e.StudentId).HasColumnType("int(11)");
+                entity.Property(e => e.StudentId).HasColumnType("bigint(20)");
 
-                entity.Property(e => e.CourseId).HasColumnType("int(11)");
+                entity.Property(e => e.CourseId).HasColumnType("bigint(20)");
 
                 entity.Property(e => e.Grade).HasColumnType("varchar(2)");
 
@@ -71,22 +61,20 @@ namespace Mjosc.SimpleLMS.Entities.Models
                     .WithMany(p => p.Enrollment)
                     .HasForeignKey(d => d.CourseId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_CourseId");
+                    .HasConstraintName("CourseFK");
 
                 entity.HasOne(d => d.Student)
                     .WithMany(p => p.Enrollment)
                     .HasForeignKey(d => d.StudentId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_StudentId");
+                    .HasConstraintName("StudentFK");
             });
 
-            modelBuilder.Entity<Student>(entity =>
+            modelBuilder.Entity<User>(entity =>
             {
-                entity.Property(e => e.StudentId).HasColumnType("int(11)");
+                entity.Property(e => e.UserId).HasColumnType("bigint(20)");
 
-                entity.Property(e => e.Dob)
-                    .HasColumnName("DOB")
-                    .HasColumnType("date");
+                entity.Property(e => e.DateOfBirth).HasColumnType("date");
 
                 entity.Property(e => e.FirstName)
                     .IsRequired()
@@ -95,24 +83,22 @@ namespace Mjosc.SimpleLMS.Entities.Models
                 entity.Property(e => e.LastName)
                     .IsRequired()
                     .HasColumnType("varchar(45)");
-            });
 
-            modelBuilder.Entity<Teacher>(entity =>
-            {
-                entity.Property(e => e.TeacherId).HasColumnType("int(11)");
-
-                entity.Property(e => e.Dob)
+                entity.Property(e => e.PasswordHash)
                     .IsRequired()
-                    .HasColumnName("DOB")
-                    .HasColumnType("varchar(45)");
+                    .HasMaxLength(32);
 
-                entity.Property(e => e.FirstName)
+                entity.Property(e => e.PasswordSalt)
                     .IsRequired()
-                    .HasColumnType("varchar(45)");
+                    .HasMaxLength(32);
 
-                entity.Property(e => e.LastName)
+                entity.Property(e => e.Role)
                     .IsRequired()
-                    .HasColumnType("varchar(45)");
+                    .HasColumnType("varchar(12)");
+
+                entity.Property(e => e.Username)
+                    .IsRequired()
+                    .HasColumnType("varchar(12)");
             });
         }
     }

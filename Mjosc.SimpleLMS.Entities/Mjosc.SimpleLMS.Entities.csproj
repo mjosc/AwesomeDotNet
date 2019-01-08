@@ -15,5 +15,7 @@
   
   <ItemGroup>
     <Compile Remove="Class1.cs" />
+    <Compile Remove="Models\Student.cs" />
+    <Compile Remove="Models\Teacher.cs" />
   </ItemGroup>
 </Project>
