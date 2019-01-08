@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,25 +11,25 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
     [ApiController]
     public class StudentsController : ControllerBase
     {
-        private readonly LmsDbContext _dbContext;
+        private readonly LmsDbContext db;
 
         public StudentsController(LmsDbContext context)
         {
-            _dbContext = context;
+            db = context;
         }
 
         // GET: api/students
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Student>>> GetStudents()
         {
-            return await _dbContext.Student.ToListAsync();
+            return await db.Student.ToListAsync();
         }
 
         // GET: api/students/1
         [HttpGet("{id}")]
         public async Task<ActionResult<Student>> GetStudent(int id)
         {
-            var student = await _dbContext.Student.FindAsync(id);
+            var student = await db.Student.FindAsync(id);
             if (student == null)
             {
                 return NotFound();
