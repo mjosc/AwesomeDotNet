@@ -20,21 +20,21 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
 
         // GET: api/students
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Student>>> GetStudents()
+        public async Task<ActionResult<IEnumerable<User>>> GetStudents()
         {
-            return await db.Student.ToListAsync();
+            return await db.User.ToListAsync();
         }
 
-        // GET: api/students/1
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Student>> GetStudent(int id)
-        {
-            var student = await db.Student.FindAsync(id);
-            if (student == null)
-            {
-                return NotFound();
-            }
-            return student;
-        }
+        //// GET: api/students/1
+        //[HttpGet("{id}")]
+        //public async Task<ActionResult<Student>> GetStudent(int id)
+        //{
+        //    var student = await db.Student.FindAsync(id);
+        //    if (student == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    return student;
+        //}
     }
 }
