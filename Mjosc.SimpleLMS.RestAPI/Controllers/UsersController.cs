@@ -21,12 +21,12 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly AuthenticationStrings _authStrings;
+        private readonly string jwtSecretKey;
 
         public UsersController(IUserService userService, IOptions<AuthenticationStrings> authStrings)
         {
             _userService = userService;
-            _authStrings = authStrings.Value;
+            jwtSecretKey = authStrings.Value.JwtSecretKey;
         }
 
         // POST: users/authenticate
@@ -34,46 +34,57 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
         [HttpPost("authenticate")]
         public ActionResult Authenticate([FromBody] UserDTO userDTO)
         {
-            Console.WriteLine("TEST");
-            Console.WriteLine(userDTO.ToString());
-            Console.WriteLine(userDTO.Password);
-            Console.WriteLine(userDTO.Username);
-
             User user = _userService.Authenticate(userDTO.Username, userDTO.Password);
-
 
             if (user == null)
             {
                 Console.WriteLine("No user in database.");
-                //return Unauthorized();
             }
             user = new User
             {
                 UserId = 1
             };
 
-
-            var jwtTokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_authStrings.JwtSecretKey);
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Name, user.UserId.ToString())
-                }),
-                Expires = DateTime.UtcNow.AddMinutes(60),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-
-            SecurityToken token = jwtTokenHandler.CreateToken(tokenDescriptor);
-            string tokenString = jwtTokenHandler.WriteToken(token);
-
             return Ok(new
             {
                 id = "awesome",
                 username = "awesome",
-                token = tokenString
+                token = SecurityUtil.CreateJsonWebToken(jwtSecretKey, user)
             });
+        }
+
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public ActionResult Register([FromBody]UserDTO userDTO)
+        {
+            // TODO: Manual mapping between User models can be replaced with AutoMapper.
+            // The current implementation, however, is useful due to the fact that fields
+            // uninitialized from the request body are more apparent (e.g. PasswordHash
+            // and PasswordSalt are assigned from within the UserService dependency.
+            User user = new User
+            {
+                FirstName = userDTO.FirstName,
+                LastName = userDTO.LastName,
+                Username = userDTO.Username,
+                DateOfBirth = userDTO.DateOfBirth,
+                Role = userDTO.Role
+            };
+
+            try
+            {
+                // user.UserId is assigned by the database. The id is used within the
+                // CreateJsonWebToken utility method.
+                user = _userService.Create(user, userDTO.Password);
+                return Ok(new
+                {
+                    username = user.Username,
+                    token = SecurityUtil.CreateJsonWebToken(jwtSecretKey, user)
+                });
+            }
+            catch (ApplicationException e)
+            {
+                return BadRequest(new { message = e.Message });
+            }
         }
     }
 }

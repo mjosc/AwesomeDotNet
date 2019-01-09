@@ -11,7 +11,7 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
 {
     // A helper class for hashing and comparing hashed passwords. Many of the 
     // implementation details are borrowed from https://goo.gl/4td77q.
-    public static class SecurityService
+    public static class SecurityUtil
     {
         public static void Hash(string password, out byte[] salt, out byte[] hash)
         {

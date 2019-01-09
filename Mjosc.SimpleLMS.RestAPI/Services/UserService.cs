@@ -33,7 +33,7 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
             }
 
             User user = db.User.SingleOrDefault();
-            if (user == null || !CryptoService.Verify(password, user.PasswordHash, user.PasswordSalt))
+            if (user == null || !SecurityUtil.Verify(password, user.PasswordHash, user.PasswordSalt))
             {
                 return null;
             }
@@ -43,7 +43,34 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
 
         public User Create(User user, string password)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                throw new ApplicationException("Invalid password.");
+            }
+
+            // TODO: How are transactions handled within LINQ method syntax? The following
+            // should technically be in a transaction due to the multi-part read/write.
+
+            if (db.User.Any(u => u.Username == user.Username))
+            {
+                throw new ApplicationException($"Username: {user.Username} is already taken");
+            }
+
+            byte[] salt, hash;
+            SecurityUtil.Hash(password, out salt, out hash);
+
+            Console.WriteLine(salt.Length);
+            Console.WriteLine(hash.Length);
+
+            user.PasswordSalt = salt;
+            user.PasswordHash = hash;
+
+            // This should not fail if the username is available and the username check is
+            // completed in the same transaction as the row insertion.
+            db.User.Add(user);
+            db.SaveChanges();
+
+            return user;
         }
 
         public IEnumerable<User> GetAll()
