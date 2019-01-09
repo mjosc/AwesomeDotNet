@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,11 +23,14 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly string jwtSecretKey;
+        private readonly IMapper _mapper;
 
-        public UsersController(IUserService userService, IOptions<AuthenticationStrings> authStrings)
+        public UsersController(IUserService userService, IOptions<AuthenticationStrings> authStrings,
+            IMapper mapper)
         {
             _userService = userService;
             jwtSecretKey = authStrings.Value.JwtSecretKey;
+            _mapper = mapper;
         }
 
         // TODO: This controller and the underlying UserService class do not implement async/await.
@@ -64,7 +68,7 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
             // The current implementation, however, is useful due to the fact that fields
             // uninitialized from the request body are more apparent (e.g. PasswordHash
             // and PasswordSalt are assigned from within the UserService dependency.
-            User user = new User
+            var user = new User
             {
                 FirstName = userDTO.FirstName,
                 LastName = userDTO.LastName,
@@ -90,6 +94,21 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
                 // UserService instance.
                 return BadRequest(new { message = e.Message });
             }
+        }
+
+        // GET: /users
+        [HttpGet]
+        public ActionResult<IEnumerable<object>> GetAll()
+        {
+            IEnumerable<object> users = _userService.GetAll();
+            return Ok(users);
+        }
+
+        // GET: /users/3
+        [HttpGet("{id}")]
+        public ActionResult<object> GetUser(long id)
+        {
+            return _userService.GetUser(id);
         }
     }
 }
