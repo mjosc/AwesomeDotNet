@@ -42,11 +42,12 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
 
             if (user == null)
             {
-                Console.WriteLine("No user in database.");
+                return BadRequest("Invalid username or password");
             }
 
             // TODO: This response is also used in Register. It would be useful to create a
-            // ServerResponse class that would wrap HTTP responses.
+            // ServerResponse class that would wrap HTTP responses (including useful descriptions
+            // of errors).
             return Ok(new
             {
                 username = user.Username,

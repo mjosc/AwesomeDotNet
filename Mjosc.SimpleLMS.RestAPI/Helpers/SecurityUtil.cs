@@ -31,6 +31,7 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
 
             using (var hmac = new HMACSHA512())
             {
+                // Required in order to store the salt to the database.
                 salt = hmac.Key;
                 hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
             }
@@ -61,12 +62,15 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, user.UserId.ToString())
+                    new Claim(ClaimTypes.Name, user.UserId.ToString()),
+                    new Claim(ClaimTypes.Role, user.Role)
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(60),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature)
             };
 
+            // Header.Payload.Secret
             SecurityToken token = jwtTokenHandler.CreateToken(tokenDescriptor);
             return jwtTokenHandler.WriteToken(token);
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -32,9 +33,18 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
                 return null;
             }
 
-            User user = db.User.SingleOrDefault();
-            if (user == null || !SecurityUtil.Verify(password, user.PasswordHash, user.PasswordSalt))
+            User user = db.User.SingleOrDefault(u => u.Username == username);
+            if (user == null || !SecurityUtil.Verify(password, user.PasswordSalt, user.PasswordHash))
             {
+                if (user == null)
+                {
+                    Console.WriteLine("USER IS NULL");
+                }
+                else
+                {
+                    Console.WriteLine("FAILED PASSWORD VERIFICATION");
+                }
+
                 return null;
             }
 
@@ -58,9 +68,6 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
 
             byte[] salt, hash;
             SecurityUtil.Hash(password, out salt, out hash);
-
-            Console.WriteLine(salt.Length);
-            Console.WriteLine(hash.Length);
 
             user.PasswordSalt = salt;
             user.PasswordHash = hash;
