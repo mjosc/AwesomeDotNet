@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using Mjosc.SimpleLMS.Entities.Models;
 using Mjosc.SimpleLMS.RestAPI.Extensions;
 using Mjosc.SimpleLMS.RestAPI.Services;
+using AutoMapper;
 
 namespace Mjosc.SimpleLMS.RestAPI
 {
@@ -37,6 +38,7 @@ namespace Mjosc.SimpleLMS.RestAPI
             services.AddJwtAuthentication(Configuration, configSection);
 
             services.AddScoped<IUserService, UserService>();
+            services.AddAutoMapper();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,6 +56,7 @@ namespace Mjosc.SimpleLMS.RestAPI
             }
 
             app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseMvc();
         }
     }
