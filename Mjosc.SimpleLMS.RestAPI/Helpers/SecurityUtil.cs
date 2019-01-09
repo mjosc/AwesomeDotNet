@@ -1,13 +1,17 @@
 ﻿using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using Mjosc.SimpleLMS.Entities.Models;
 
 namespace Mjosc.SimpleLMS.RestAPI.Services
 {
     // A helper class for hashing and comparing hashed passwords. Many of the 
     // implementation details are borrowed from https://goo.gl/4td77q.
-    public static class CryptoService
+    public static class SecurityService
     {
         public static void Hash(string password, out byte[] salt, out byte[] hash)
         {
@@ -47,6 +51,24 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
                 byte[] computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
                 return computedHash.SequenceEqual(hash);
             }
+        }
+
+        public static string CreateJsonWebToken(string secretKey, User user)
+        {
+            var jwtTokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(secretKey);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, user.UserId.ToString())
+                }),
+                Expires = DateTime.UtcNow.AddMinutes(60),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            SecurityToken token = jwtTokenHandler.CreateToken(tokenDescriptor);
+            return jwtTokenHandler.WriteToken(token);
         }
     }
 }
