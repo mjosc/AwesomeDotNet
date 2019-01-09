@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mjosc.SimpleLMS.Entities.Models;
 using Mjosc.SimpleLMS.RestAPI.Extensions;
+using Mjosc.SimpleLMS.RestAPI.Services;
 
 namespace Mjosc.SimpleLMS.RestAPI
 {
@@ -31,7 +32,11 @@ namespace Mjosc.SimpleLMS.RestAPI
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddLmsDbContext(Configuration);
-            services.AddJwtAuthentication(Configuration);
+            IConfigurationSection configSection = 
+                services.ConfigureAuthenticationStrings(Configuration);
+            services.AddJwtAuthentication(Configuration, configSection);
+
+            services.AddScoped<IUserService, UserService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -43,7 +48,8 @@ namespace Mjosc.SimpleLMS.RestAPI
             }
             else
             {
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                // The default HSTS value is 30 days. You may want to change this for 
+                // production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 

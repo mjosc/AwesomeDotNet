@@ -6,15 +6,27 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Mjosc.SimpleLMS.Entities.Models;
+using Mjosc.SimpleLMS.RestAPI.Helpers;
 
 namespace Mjosc.SimpleLMS.RestAPI.Extensions
 {
     public static class ServiceExtensions
     {
-        public static void AddJwtAuthentication(this IServiceCollection services, IConfiguration config)
+
+        public static IConfigurationSection ConfigureAuthenticationStrings(
+            this IServiceCollection services, IConfiguration config)
         {
-            string keyString = config.GetSection("AuthenticationStrings")["JwtSecretKey"];
-            byte[] secretKey = Encoding.ASCII.GetBytes(keyString);
+            IConfigurationSection authStrings = config.GetSection("AuthenticationStrings");
+            services.Configure<AuthenticationStrings>(authStrings);
+
+            // Make this available to the AddJwtAuthentication method.
+            return authStrings;
+        }
+
+        public static void AddJwtAuthentication(this IServiceCollection services, 
+            IConfiguration config, IConfigurationSection configSection)
+        {
+            byte[] secretKey = Encoding.ASCII.GetBytes(configSection["JwtSecretKey"]);
 
             services.AddAuthentication(options =>
             {
