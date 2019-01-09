@@ -29,6 +29,10 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
             jwtSecretKey = authStrings.Value.JwtSecretKey;
         }
 
+        // TODO: This controller and the underlying UserService class do not implement async/await.
+        // Add support for asyncronous database access similar to the other controllers which do not
+        // depend on an underlying service.
+
         // POST: users/authenticate
         [AllowAnonymous]
         [HttpPost("authenticate")]
@@ -40,19 +44,17 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
             {
                 Console.WriteLine("No user in database.");
             }
-            user = new User
-            {
-                UserId = 1
-            };
 
+            // TODO: This response is also used in Register. It would be useful to create a
+            // ServerResponse class that would wrap HTTP responses.
             return Ok(new
             {
-                id = "awesome",
-                username = "awesome",
+                username = user.Username,
                 token = SecurityUtil.CreateJsonWebToken(jwtSecretKey, user)
             });
         }
 
+        // POST: users/register
         [AllowAnonymous]
         [HttpPost("register")]
         public ActionResult Register([FromBody]UserDTO userDTO)
@@ -72,8 +74,8 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
 
             try
             {
-                // user.UserId is assigned by the database. The id is used within the
-                // CreateJsonWebToken utility method.
+                // The user instance must be re-assigned here. The user's id is provided by the
+                // database and that id is used in generating the JWT.
                 user = _userService.Create(user, userDTO.Password);
                 return Ok(new
                 {
@@ -83,6 +85,8 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
             }
             catch (ApplicationException e)
             {
+                // TODO: Customize response to client beyond the error messages thrown within the
+                // UserService instance.
                 return BadRequest(new { message = e.Message });
             }
         }
