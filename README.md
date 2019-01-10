@@ -38,3 +38,17 @@ The API provides access to a very simple LMS (learning management system) databa
 | User | A user may have one of two roles: student or teacher |
 | Course | A course is taught by a single teacher but may contain multiple students |
 | Enrollment | Students are enrolled in one or more courses and receive a grade for each course |
+
+### Helpful resources
+https://docs.microsoft.com/en-us/aspnet/core/tutorials/first-web-api?view=aspnetcore-2.2&tabs=visual-studio  
+
+https://jwt.io/
+
+https://docs.microsoft.com/en-us/ef/core/get-started/aspnetcore/existing-db  
+
+https://code-maze.com/net-core-web-development-part2/  
+
+https://github.com/cornflourblue/aspnet-core-jwt-authentication-api  
+
+https://auth0.com/blog/securing-asp-dot-net-core-2-applications-with-jwts/  
+
