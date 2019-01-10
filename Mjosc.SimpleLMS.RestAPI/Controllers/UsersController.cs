@@ -119,6 +119,8 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
 
         // --------------------------------------------------------------------
         // Private routes
+        //
+        // More complex use cases are found in the other controllers.
         // --------------------------------------------------------------------
 
         // GET: /users
