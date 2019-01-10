@@ -1,17 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Mjosc.SimpleLMS.Entities.Models;
 using Mjosc.SimpleLMS.RestAPI.Extensions;
 using Mjosc.SimpleLMS.RestAPI.Services;
 using AutoMapper;
@@ -27,21 +18,34 @@ namespace Mjosc.SimpleLMS.RestAPI
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+        // This method gets called by the runtime. 
+        // Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // -------------------------------------------------------------------
+            // .NET Core provided configs
+            // -------------------------------------------------------------------
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
+            // -------------------------------------------------------------------
+            // Custom configurations
+            // -------------------------------------------------------------------
+
             services.AddLmsDbContext(Configuration);
+
             IConfigurationSection configSection = 
                 services.ConfigureAuthenticationStrings(Configuration);
+
             services.AddJwtAuthentication(Configuration, configSection);
 
             services.AddScoped<IUserService, UserService>();
             services.AddAutoMapper();
+            services.EnableCors();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        // This method gets called by the runtime. 
+        // Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
@@ -55,6 +59,7 @@ namespace Mjosc.SimpleLMS.RestAPI
                 app.UseHsts();
             }
 
+            app.UseCors("CorsPolicy");
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseMvc();
