@@ -9,6 +9,26 @@ using Mjosc.SimpleLMS.Entities.Models;
 
 namespace Mjosc.SimpleLMS.RestAPI.Controllers
 {
+    // -------------------------------------------------------------------
+    // A simple API controller responsible for accessing data pertaining
+    // to Teacher entities.
+    //
+    // Unlike UsersController, this controller makes use of asyncronous
+    // methods.
+    //
+    // Role-based authentication is not configured. Though this data is
+    // private from non-authenticated users, both students and teachers
+    // are provided access once registered.
+    //
+    // The use of anonymous types is obvious. This could be minimized
+    // outside the context of the LINQ queries with additional DTOs 
+    // defined in the referenced Entities project. However, for a
+    // controller not dependent on any underlying service (such as that
+    // implemented in Services/UserService and
+    // Controllers/UsersController) a return type of object is sufficient
+    // for readability.
+    // -------------------------------------------------------------------
+
     [Authorize]
     [Route("api/[Controller]")]
     [ApiController]
