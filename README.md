@@ -3,9 +3,9 @@ A simple web API built with Microsoft's .NET Core framework.
 
 ### Objective
 
-1. <mark>Build a simple web API with the .NET Core framework.</mark>
-2. <mark>Implement JWT authentication.</mark>
-3. <mark>Learn LINQ method syntax.</mark>
+1. **Build a simple web API with the .NET Core framework.**
+2. **Implement JWT authentication.**
+3. **Learn LINQ method syntax.**
 4. Use EF Core and a MySQL database provider to scaffold a real database
 5. Practice with C# and SQL schemas.
 
