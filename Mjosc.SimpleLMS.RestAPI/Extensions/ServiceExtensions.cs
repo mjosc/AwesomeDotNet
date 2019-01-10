@@ -64,19 +64,5 @@ namespace Mjosc.SimpleLMS.RestAPI.Extensions
                 options.UseMySql(config.GetConnectionString("SimpleLmsDatabase"))
             );
         }
-
-        public static void EnableCors(this IServiceCollection services)
-        {
-            services.AddCors(options =>
-            {
-                // TODO: This is a very generous policy. Use WithOrigins, 
-                // WithMethods, and WithHeaders to narrow external access.
-                options.AddPolicy("CorsPolicy",
-                    builder => builder.AllowAnyOrigin()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials());
-            });
-        }
     }
 }

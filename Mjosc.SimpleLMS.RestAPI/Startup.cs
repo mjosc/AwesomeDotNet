@@ -32,6 +32,7 @@ namespace Mjosc.SimpleLMS.RestAPI
             // Custom configurations
             // -------------------------------------------------------------------
 
+            services.AddCors();
             services.AddLmsDbContext(Configuration);
 
             IConfigurationSection configSection = 
@@ -41,7 +42,6 @@ namespace Mjosc.SimpleLMS.RestAPI
 
             services.AddScoped<IUserService, UserService>();
             services.AddAutoMapper();
-            services.EnableCors();
         }
 
         // This method gets called by the runtime. 
@@ -54,12 +54,14 @@ namespace Mjosc.SimpleLMS.RestAPI
             }
             else
             {
-                // The default HSTS value is 30 days. You may want to change this for 
-                // production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
-            app.UseCors("CorsPolicy");
+            app.UseCors(x => x
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader());
+
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseMvc();
