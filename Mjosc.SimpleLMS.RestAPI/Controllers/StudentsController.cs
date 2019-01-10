@@ -46,11 +46,6 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
         public async Task<ActionResult<IEnumerable<object>>> GetStudents()
         {
             // -----------------------------------------------------------
-            // LINQ method syntax equivalent the following SQl query:
-            // 
-            // TODO: Attempt the corresponding LINQ method syntax with
-            // pure SQL syntax outside the context of this source code.
-            // 
             // The nested query does not need to check whether the role
             // is student since Enrollment does not contain Teacher ids.
             //
@@ -94,7 +89,7 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
             // Select User.FirstName, User.LastName, User.DateOfBirth
             //      where User.UserId = id;
             // -----------------------------------------------------------
-            return await db.User
+            var result = await db.User
                 .Where(u => u.UserId == id && u.Role == "Student")
                 .Select(u => new
                 {
@@ -103,6 +98,13 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
                     DOB = u.DateOfBirth
                 })
                 .FirstOrDefaultAsync();
+
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            return result;
         }
 
         // GET: api/students/courses/chemistry
