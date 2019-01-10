@@ -56,12 +56,10 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
         }
 
         // -------------------------------------------------------------------
-        // TODO: How are transactions handled within LINQ (more specifically,
-        // using the method syntax)?
+        // TODO: Is there a better way to handle the transaction contained
+        // within the Create method? Is db.SaveChanges() actually sufficient?
         //
-        // The Create method should theoretically contain a transaction given
-        // that after the database is queried for the existence of a particular
-        // username, another entity might create that username before this one.
+        // See https://docs.microsoft.com/en-us/ef/core/saving/transactions
         // --------------------------------------------------------------------
 
         public User Create(User user, string password)
@@ -71,22 +69,26 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
                 throw new ApplicationException("Invalid password.");
             }
 
-            if (db.User.Any(u => u.Username == user.Username))
+            using (var transaction = db.Database.BeginTransaction())
             {
-                throw new ApplicationException($"Username: {user.Username} is already taken");
+                if (db.User.Any(u => u.Username == user.Username))
+                {
+                    throw new ApplicationException($"Username: {user.Username} is already taken");
+                }
+
+                // Pass by reference.
+                byte[] salt, hash;
+                SecurityUtil.Hash(password, out salt, out hash);
+
+                user.PasswordSalt = salt;
+                user.PasswordHash = hash;
+
+                db.User.Add(user);
+                db.SaveChanges();
+                transaction.Commit();
+
+                return user;
             }
-
-            // Pass by reference.
-            byte[] salt, hash;
-            SecurityUtil.Hash(password, out salt, out hash);
-
-            user.PasswordSalt = salt;
-            user.PasswordHash = hash;
-
-            db.User.Add(user);
-            db.SaveChanges();
-
-            return user;
         }
 
         public IEnumerable<object> GetAll()
