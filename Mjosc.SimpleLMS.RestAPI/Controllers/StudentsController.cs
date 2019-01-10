@@ -93,15 +93,9 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
             // 
             // Select User.FirstName, User.LastName, User.DateOfBirth
             //      where User.UserId = id;
-            //
-            // db.User.FindAsync(id) would work here with the appropriate
-            // mapper and DTO in order to avoid responding with the
-            // complete User object (with fields such as passwordSalt and
-            // passwordHash).
             // -----------------------------------------------------------
-
             return await db.User
-                .Where(u => u.UserId == id)
+                .Where(u => u.UserId == id && u.Role == "Student")
                 .Select(u => new
                 {
                     u.FirstName,
