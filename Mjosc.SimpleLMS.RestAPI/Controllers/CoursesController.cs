@@ -46,11 +46,6 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
         public async Task<ActionResult<IEnumerable<object>>> GetCourses()
         {
             // -----------------------------------------------------------
-            // LINQ method syntax equivalent the following SQl query:
-            // 
-            // TODO: Attempt the corresponding LINQ method syntax with
-            // pure SQL syntax outside the context of this source code.
-            //
             // The nested query does not need to check whether the role is
             // teacher since Course does not contain student ids.
             // -----------------------------------------------------------
@@ -78,11 +73,6 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
         public async Task<ActionResult<object>> GetCourse(long id)
         {
             // -----------------------------------------------------------
-            // LINQ method syntax equivalent the following SQl query:
-            // 
-            // TODO: Attempt the corresponding LINQ method syntax with
-            // pure SQL syntax outside the context of this source code.
-            //
             // Note the Teacher field is taking advantage of the implicit
             // joins within the entity framework.
             // -----------------------------------------------------------
@@ -111,11 +101,6 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
         public async Task<ActionResult<object>> GetCourse(string courseName)
         {
             // -----------------------------------------------------------
-            // LINQ method syntax equivalent the following SQl query:
-            // 
-            // TODO: Attempt the corresponding LINQ method syntax with
-            // pure SQL syntax outside the context of this source code.
-            //
             // Note the Teacher field is taking advantage of the implicit
             // joins within the entity framework.
             // -----------------------------------------------------------
