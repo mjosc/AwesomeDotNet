@@ -1,21 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Mjosc.SimpleLMS.Entities.Models;
 using Mjosc.SimpleLMS.RestAPI.Helpers;
 using Mjosc.SimpleLMS.RestAPI.Services;
 
 namespace Mjosc.SimpleLMS.RestAPI.Controllers
 {
+    // -------------------------------------------------------------------
+    // A simple API authorization controller which also includes generic
+    // routes for retrieving lists of all users and/or a user by a
+    // specific id.
+    //
+    // See Controllers/StudentController and Controllers/TeacherController
+    // for routes specific to those roles (note that role-based
+    // authentication is not implemented; both teachers and students have
+    // access to all controllers once authenticated here).
+    //
+    // Unlike StudentController and TeacherController, this controller does
+    // not implement async/await. This is in part due to the desire to
+    // practice with both and in part to having yet to integrate the async
+    // methods within the underlying UserService class upon which this
+    // controller depends for database IO.
+    //
+    // Note the use of anonymous types. This could be minimized with the
+    // addition of more DTOs (as defined in the referenced Entities
+    // project). The AutoMapper library has been added to this project
+    // but the implementation has not yet been created.
+    // --------------------------------------------------------------------
+
     [Authorize]
     [ApiController]
     [Route("[controller]")]
@@ -23,6 +39,8 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly string jwtSecretKey;
+
+        // TODO: To be implemented. See Helpers/AutoMapperUser.cs.
         private readonly IMapper _mapper;
 
         public UsersController(IUserService userService, IOptions<AuthenticationStrings> authStrings,
@@ -33,15 +51,25 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
             _mapper = mapper;
         }
 
-        // TODO: This controller and the underlying UserService class do not implement async/await.
-        // Add support for asyncronous database access similar to the other controllers which do not
-        // depend on an underlying service.
+
+        // --------------------------------------------------------------------
+        // Anonymous authentication routes
+        //
+        // Implements JWT. See Helpers/SecurityUtil.cs for JWT implementation.
+        //
+        // TODO: It would be useful to create a wrapper class aroundn HTTP
+        // responses in order to reduce a bit of the duplicate code found in
+        // the following two methods.
+        // --------------------------------------------------------------------
+
 
         // POST: users/authenticate
         [AllowAnonymous]
         [HttpPost("authenticate")]
         public ActionResult Authenticate([FromBody] UserDTO userDTO)
         {
+            // The User class does not contain a password field. The id is 
+            // provided by the database (auto-incremented).
             User user = _userService.Authenticate(userDTO.Username, userDTO.Password);
 
             if (user == null)
@@ -49,13 +77,10 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
                 return BadRequest("Invalid username or password");
             }
 
-            // TODO: This response is also used in Register. It would be useful to create a
-            // ServerResponse class that would wrap HTTP responses (including useful descriptions
-            // of errors).
             return Ok(new
             {
-                username = user.Username,
-                token = SecurityUtil.CreateJsonWebToken(jwtSecretKey, user)
+                user.Username,
+                Token = SecurityUtil.CreateJsonWebToken(jwtSecretKey, user)
             });
         }
 
@@ -64,10 +89,7 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
         [HttpPost("register")]
         public ActionResult Register([FromBody]UserDTO userDTO)
         {
-            // TODO: Manual mapping between User models can be replaced with AutoMapper.
-            // The current implementation, however, is useful due to the fact that fields
-            // uninitialized from the request body are more apparent (e.g. PasswordHash
-            // and PasswordSalt are assigned from within the UserService dependency.
+            // TODO: AutoMapper will be helpful here.
             var user = new User
             {
                 FirstName = userDTO.FirstName,
@@ -79,29 +101,31 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
 
             try
             {
-                // The user instance must be re-assigned here. The user's id is provided by the
-                // database and that id is used in generating the JWT.
+                // The id provided by the database is required for JWT generation.
                 user = _userService.Create(user, userDTO.Password);
                 return Ok(new
                 {
-                    username = user.Username,
-                    token = SecurityUtil.CreateJsonWebToken(jwtSecretKey, user)
+                    user.Username,
+                    Token = SecurityUtil.CreateJsonWebToken(jwtSecretKey, user)
                 });
             }
             catch (ApplicationException e)
             {
-                // TODO: Customize response to client beyond the error messages thrown within the
-                // UserService instance.
+                // TODO: ServerResponse wrapper with custom error messages
+                // will be helpful here.
                 return BadRequest(new { message = e.Message });
             }
         }
+
+        // --------------------------------------------------------------------
+        // Private routes
+        // --------------------------------------------------------------------
 
         // GET: /users
         [HttpGet]
         public ActionResult<IEnumerable<object>> GetAll()
         {
-            IEnumerable<object> users = _userService.GetAll();
-            return Ok(users);
+            return Ok(_userService.GetAll());
         }
 
         // GET: /users/3
