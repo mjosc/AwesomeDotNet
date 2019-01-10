@@ -9,16 +9,21 @@ using Mjosc.SimpleLMS.Entities.Models;
 
 namespace Mjosc.SimpleLMS.RestAPI.Services
 {
-    // A helper class for hashing and comparing hashed passwords. Many of the 
-    // implementation details are borrowed from https://goo.gl/4td77q.
+    // -------------------------------------------------------------------
+    // A utility class for all security-related methods. This class
+    // contains methods for both password hashing and verification as well
+    // as the underlying JWT implementation used by .NET Core's
+    // authentication framework.
+    //
+    // The hashing and verification code is derived
+    // from https://goo.gl/4td77q.
+    // The JWT code is derived from https://goo.gl/T5Aiet.
+    // -------------------------------------------------------------------
+
     public static class SecurityUtil
     {
         public static void Hash(string password, out byte[] salt, out byte[] hash)
         {
-            // The following two conditions should be checked server-side but outside
-            // the context of this method. These methods should be primarily for 
-            // development purposes.
-
             if (password == null)
             {
                 throw new ArgumentNullException(nameof(password));
@@ -32,11 +37,14 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
             using (var hmac = new HMACSHA512())
             {
                 // Required in order to store the salt to the database.
+                // The two byte arrays are passed by reference.
                 salt = hmac.Key;
                 hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
             }
         }
 
+        // Verifies whether the hash of the newly provided password matches that
+        // of a previously computed hash (originating from the database).
         public static bool Verify(string password, byte[] salt, byte[] hash)
         {
             if (password == null)
@@ -54,6 +62,7 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
             }
         }
 
+        // Generates a unique web token based on the user's id and role.
         public static string CreateJsonWebToken(string secretKey, User user)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
@@ -65,7 +74,7 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
                     new Claim(ClaimTypes.Name, user.UserId.ToString()),
                     new Claim(ClaimTypes.Role, user.Role)
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(60),
+                Expires = DateTime.UtcNow.AddHours(6),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key),
                     SecurityAlgorithms.HmacSha256Signature)
             };
