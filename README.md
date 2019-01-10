@@ -1,13 +1,15 @@
 # AwesomeDotNet
 A simple web API built with Microsoft's .NET Core framework.
+
 ### Objective
-1. Build a simple web API with the .NET Core framework.
-2. Implement JWT authentication.
-3. Learn LINQ method syntax.
+
+1. <mark>Build a simple web API with the .NET Core framework.</mark>
+2. <mark>Implement JWT authentication.</mark>
+3. <mark>Learn LINQ method syntax.</mark>
 4. Use EF Core and a MySQL database provider to scaffold a real database
 5. Practice with C# and SQL schemas.
 
-### Current API
+### API
 
 The API provides access to a very simple LMS (learning management system) database.
 
@@ -30,7 +32,7 @@ The API provides access to a very simple LMS (learning management system) databa
 | GET api/students/courses/{name} | Get all students enrolled in the given course | None | Array of students |
 |GET api/students/grades/{grade} | Get all students with the specified letter grade | None | Array of students |
 
-### MySQL Schema Summary
+### MySQL Schema
 | Table | Description |
 |---|---|
 | User | A user may have one of two roles: student or teacher |
