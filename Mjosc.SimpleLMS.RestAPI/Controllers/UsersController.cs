@@ -34,7 +34,7 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
 
     [Authorize]
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -87,7 +87,7 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
         // POST: users/register
         [AllowAnonymous]
         [HttpPost("register")]
-        public ActionResult Register([FromBody]UserDTO userDTO)
+        public ActionResult Register([FromBody] UserDTO userDTO)
         {
             // TODO: AutoMapper will be helpful here.
             var user = new User
