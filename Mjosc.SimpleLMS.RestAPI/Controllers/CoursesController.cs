@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Mjosc.SimpleLMS.Entities.Models;
 
 namespace Mjosc.SimpleLMS.RestAPI.Controllers
 {
+    [Authorize]
     [Route("api/[Controller]")]
     [ApiController]
     public class CoursesController : ControllerBase
@@ -22,27 +23,60 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
 
         // GET: api/courses
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Course>>> GetCourses()
+        public async Task<ActionResult<IEnumerable<object>>> GetCourses()
         {
-            return await db.Course.ToListAsync();
+            // -----------------------------------------------------------
+            // LINQ method syntax equivalent the following SQl query:
+            // 
+            // TODO: Attempt the corresponding LINQ method syntax with
+            // pure SQL syntax outside the context of this source code.
+            //
+            // The nested query does not need to check whether the role is
+            // teacher since Course does not contain student ids.
+            // -----------------------------------------------------------
+
+            return await db.Course
+                .Select(c => new
+                {
+                    c.CourseId,
+                    c.CourseName,
+                    c.CreditHours,
+                    Teacher = db.User
+
+                        .Where(u => u.UserId == c.TeacherId)
+                        .Select(u => new
+                        {
+                            u.FirstName,
+                            u.LastName
+                        })
+                })
+                .ToListAsync();
         }
 
         // GET: api/courses/3
         [HttpGet("{id}")]
-        public async Task<ActionResult<Object>> GetCourse(int id)
+        public async Task<ActionResult<object>> GetCourse(long id)
         {
-            var result = await db.Course.FindAsync(id);
+            // -----------------------------------------------------------
+            // LINQ method syntax equivalent the following SQl query:
+            // 
+            // TODO: Attempt the corresponding LINQ method syntax with
+            // pure SQL syntax outside the context of this source code.
+            //
+            // Note the Teacher field is taking advantage of the implicit
+            // joins within the entity framework.
+            // -----------------------------------------------------------
 
-            //var result = await db.Course
-                //.Where(c => c.CourseId == id)
-                //.Select(c => new
-                //{
-                //    id = c.CourseId,
-                //    name = c.CourseName,
-                //    credit = c.CreditHours,
-                //    teacher = $"{c.Teacher.FirstName} {c.Teacher.LastName}"
-                //})
-                //.FirstAsync();
+            var result = await db.Course
+                .Where(c => c.CourseId == id)
+                .Select(c => new
+                {
+                    c.CourseId,
+                    c.CourseName,
+                    c.CreditHours,
+                    Teacher = $"{c.Teacher.FirstName} {c.Teacher.LastName}"
+                })
+                .FirstOrDefaultAsync();
 
             if (result == null)
             {
@@ -52,13 +86,118 @@ namespace Mjosc.SimpleLMS.RestAPI.Controllers
             return result;
         }
 
-        // GET: api/courses/chemistry
-        //[HttpGet("{courseName")]
-        //public async Task<ActionResult<Course>> GetCourse(string courseName)
-        //{
-        //    //var course = await db.Course
-        //    //.Where(course => )
-        //    return null;
-        //}
+        // GET: api/courses/name/chemistry
+        [HttpGet("name/{courseName}")]
+        public async Task<ActionResult<object>> GetCourse(string courseName)
+        {
+            // -----------------------------------------------------------
+            // LINQ method syntax equivalent the following SQl query:
+            // 
+            // TODO: Attempt the corresponding LINQ method syntax with
+            // pure SQL syntax outside the context of this source code.
+            //
+            // Note the Teacher field is taking advantage of the implicit
+            // joins within the entity framework.
+            // -----------------------------------------------------------
+
+            var result = await db.Course
+                .Where(c => c.CourseName == courseName)
+                .Select(c => new
+                {
+                    c.CourseId,
+                    c.CourseName,
+                    c.CreditHours,
+                    Teacher = $"{c.Teacher.FirstName} {c.Teacher.LastName}"
+                })
+                .FirstOrDefaultAsync();
+
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            return result;
+        }
+
+        // -------------------------------------------------------------------
+        // TODO: Is there a better way to handle the transaction contained
+        // within the Create method? Is db.SaveChanges() actually sufficient?
+        //
+        // See https://docs.microsoft.com/en-us/ef/core/saving/transactions
+        // --------------------------------------------------------------------
+
+        // POST: api/courses
+        [HttpPost("add")]
+        public async Task<ActionResult> Create([FromBody] Course course)
+        {
+            using (var transaction = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    if (await db.Course.AnyAsync(c => c.CourseName == course.CourseName))
+                    {
+                        // Note: This could be enforced by the SQL database by catching
+                        // exceptions thrown via the uniqueness constraint on the
+                        // courseName column when attempting to insert a course by the
+                        // same name.
+                        return BadRequest("Course names must be unique.");
+                    }
+                    else
+                    {
+                        await db.AddAsync(course);
+                        await db.SaveChangesAsync();
+                    }
+
+                    transaction.Commit();
+                    return Ok(new
+                    {
+                        course.CourseId,
+                        course.CourseName,
+                        course.CreditHours,
+                        course.TeacherId
+                    });
+                }
+                catch (Exception)
+                {
+                    // TODO: Provide a meaningful message if possible.
+                    return BadRequest();
+                }
+            }
+        }
+
+        // -------------------------------------------------------------------
+        // TODO: See previous note about transactions. According the docs, the
+        // default behavior of SaveChanges is sufficient for most use cases,
+        // the concern is the use of the word "change". Because the following
+        // delete method and the previous Create method require a read before
+        // determining whether to delete, there may be a need for
+        // Database.BeginTransaction().
+        //
+        // See https://docs.microsoft.com/en-us/ef/core/saving/transactions
+        // --------------------------------------------------------------------
+
+        // DELETE:: api/courses/1
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<object>> Delete(long id)
+        {
+            var course = await db.Course.FindAsync(id);
+            if (course == null)
+            {
+                return NotFound();
+            }
+
+            // This operation will only be successful if no students are enrolled
+            // in the specified course (enforced via foreign key).
+            db.Course.Remove(course);
+            await db.SaveChangesAsync();
+
+            return new
+            {
+                course.CourseId,
+                course.CourseName,
+                course.CreditHours,
+                course.TeacherId
+            };
+        }
     }
 }
