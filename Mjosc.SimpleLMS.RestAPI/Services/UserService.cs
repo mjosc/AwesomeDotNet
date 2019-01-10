@@ -1,17 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Mjosc.SimpleLMS.Entities.Models;
 
 namespace Mjosc.SimpleLMS.RestAPI.Services
 {
-    // Defines methods for the manipulation of User objects. Note the use of Object as the
-    // return type in order to use anonymous types. Ideally, these would be replaced by custom
-    // DTO classes within Mjosc.SimpleLMS.Entities.
+    // -------------------------------------------------------------------
+    // An interface and service class describing a few simple methods for 
+    // the manipulation of user objects. This class is a dependency of
+    // UsersController.cs and handles all of its underlying database
+    // access.
+    //
+    // Currently, password hashes and their corresponding salts are stored
+    // on the same database as all other data.
+    //
+    // Note the use of anonymous types. This could be replaced with DTOs
+    // but is not currently implemented.
+    //
+    // See StudentController, TeacherController, etc. for more complex
+    // database queries.
+    // --------------------------------------------------------------------
+
     public interface IUserService
     {
         User Authenticate(string username, string password);
@@ -20,8 +29,7 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
         User Create(User user, string password);
     }
 
-    // A service providing authenticated database access to the User entity. Again, the use of
-    // anonymous types would ideally be replaced by a series of custom DTO classes.
+
     public class UserService : IUserService
     {
         private readonly LmsDbContext db;
@@ -31,8 +39,6 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
             db = context;
         }
 
-        // Authentication method implementing JWT verification via the SecurityUtil class. Password
-        // salts and hashes are currently stored on the same database as the remainder of the data.
         public User Authenticate(string username, string password)
         {
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password)) 
@@ -49,15 +55,21 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
             return user;
         }
 
+        // -------------------------------------------------------------------
+        // TODO: How are transactions handled within LINQ (more specifically,
+        // using the method syntax)?
+        //
+        // The Create method should theoretically contain a transaction given
+        // that after the database is queried for the existence of a particular
+        // username, another entity might create that username before this one.
+        // --------------------------------------------------------------------
+
         public User Create(User user, string password)
         {
             if (string.IsNullOrWhiteSpace(password))
             {
                 throw new ApplicationException("Invalid password.");
             }
-
-            // TODO: How are transactions handled within LINQ method syntax? The following
-            // should technically be in a transaction due to the multi-part read/write.
 
             if (db.User.Any(u => u.Username == user.Username))
             {
@@ -71,8 +83,6 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
             user.PasswordSalt = salt;
             user.PasswordHash = hash;
 
-            // This should not fail if the username is available and the username check is
-            // completed in the same transaction as the row insertion.
             db.User.Add(user);
             db.SaveChanges();
 
@@ -81,6 +91,18 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
 
         public IEnumerable<object> GetAll()
         {
+            // -----------------------------------------------------------
+            // LINQ method syntax equivalent the following SQl query:
+            // 
+            // Select User.Id, User.FirstName, User.LastName, User.Role
+            // from User;
+            //
+            // db.User.ToList() would work here with the appropriate
+            // mapper and DTO in order to avoid responding with the
+            // complete User object (with fields such as passwordSalt and
+            // passwordHash).
+            // -----------------------------------------------------------
+
             return db.User.Select(u => new
             {
                 u.UserId,
@@ -92,8 +114,18 @@ namespace Mjosc.SimpleLMS.RestAPI.Services
 
         public object GetUser(long id)
         {
-            // TODO: db.User.Find() will be sufficient once additional DTOs are defined and the
-            // AutoMapper functionality is implemented.
+            // -----------------------------------------------------------
+            // LINQ method syntax equivalent the following SQl query:
+            // 
+            // Select User.FirstName, User.LastName, User.Role
+            //      where User.UserId = id;
+            //
+            // db.User.Find() would work here with the appropriate
+            // mapper and DTO in order to avoid responding with the
+            // complete User object (with fields such as passwordSalt and
+            // passwordHash).
+            // -----------------------------------------------------------
+
             return db.User
                 .Where(u => u.UserId == id)
                 .Select(u => new
