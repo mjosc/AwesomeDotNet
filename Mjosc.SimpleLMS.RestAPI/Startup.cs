@@ -35,7 +35,7 @@ namespace Mjosc.SimpleLMS.RestAPI
             services.AddCors();
             services.AddLmsDbContext(Configuration);
 
-            IConfigurationSection configSection = 
+            IConfigurationSection configSection =
                 services.ConfigureAuthenticationStrings(Configuration);
 
             services.AddJwtAuthentication(Configuration, configSection);
@@ -48,6 +48,7 @@ namespace Mjosc.SimpleLMS.RestAPI
         // Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -57,7 +58,7 @@ namespace Mjosc.SimpleLMS.RestAPI
                 app.UseHsts();
             }
 
-            app.UseCors(x => x
+            app.UseCors(options => options
                 .AllowAnyOrigin()
                 .AllowAnyMethod()
                 .AllowAnyHeader());
