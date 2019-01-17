@@ -1,5 +1,7 @@
 # AwesomeDotNet
-A simple web API built with Microsoft's .NET Core framework.
+A simple web API built with Microsoft's .NET Core framework.  
+  
+**Note: This project does not demonstrate ideal security nor efficient SQL queries. It is primarily a very simple introduction to LINQ method syntax and JWT authentication mechanisms.**
 
 ### Objective
 
